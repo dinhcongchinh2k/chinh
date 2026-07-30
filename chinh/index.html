@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+
+<!-- PWA -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#2f3347">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- VIEWPORT -->
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1,
+               maximum-scale=1,
+               user-scalable=no">
+
+<title>工作空间</title>
+
+<style>
+
+/* GLOBAL FIX */
+*{
+    box-sizing:border-box;
+    -webkit-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
+    -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#2f3347;
+}
+
+body{
+    position:fixed;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    font-family:Arial,sans-serif;
+    text-align:center;
+    color:#fff;
+    padding-top: 46px; 
+}
+
+/* NAME */
+.name{
+    margin:0px 0 18px;
+    font-size:20px;
+    font-weight:bold;
+    color:#f0d58c;
+    white-space: nowrap;
+}
+
+/* CARD */
+.card{
+    width:88%;
+    max-width:300px;
+    margin:0 auto;
+    background:#fff;
+    border-radius:22px;
+    padding-bottom:24px;
+    color:#000;
+    overflow:hidden;
+}
+
+/* HEADER */
+.card-header {
+    position: relative;
+    background: #ffb703;
+    color: #fff;
+    /* 1. Dịch chữ về bên trái */
+    text-align: left; 
+    /* 2. Tăng padding bên trái để chữ không sát mép (hiện tại là 12px, có thể tăng lên 20px) */
+    padding: 8px 14px; 
+    /* 3. Chỉnh chữ to hơn (hiện tại là 16px, bạn hãy thử 20px hoặc 22px) */
+    font-size: 17px; 
+    /* Thêm dòng này nếu muốn chữ đậm hơn */
+    font-weight: normal
+}
+
+.card-header::before,
+.card-header::after{
+    content:"";
+    position:absolute;
+    bottom:-7px;
+    width:14px;
+    height:14px;
+    background:#2f3347;
+    border-radius:50%;
+}
+.card-header::before{ left:-7px; }
+.card-header::after{ right:-7px; }
+      
+/* DATETIME */
+.datetime{
+    margin:22px 0 16px;
+    font-size:18px;
+    font-weight:bold;
+    white-space:normal;
+    word-break:break-word;
+}
+
+/* QR */
+.qr{
+    margin:8px auto;
+    width:90%;
+    max-width:230px;
+    position:relative;
+}
+
+.qr img{
+    width:100%;
+    display:block;
+    transition:opacity .3s ease;
+}
+
+/* LOADING */
+.qr-loading{
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:30px;
+    height:30px;
+    margin:-15px;
+    border:3px solid rgba(0,0,0,.25);
+    border-top-color:#ffb703;
+    border-radius:50%;
+    animation:spin .8s linear infinite;
+    display:none;
+}
+
+@keyframes spin{
+    to{transform:rotate(360deg);}
+}
+
+/* REFRESH */
+.refresh{
+    margin-top:10px;
+    color:#888;
+    font-size:17px;
+}
+
+.effective-text {
+    color: #2ECC71; /* Màu xanh lá sáng */
+    font-weight: bold;
+    text-align: center;
+    font-size: 1.2rem;
+    margin-top: 5px;
+    /* Lệnh tạo hiệu ứng nháy */
+    animation: blinker 1s linear infinite;
+}
+
+@keyframes blinker {
+    50% {
+        opacity: 0; /* Làm mờ đi 50% thời gian */
+    }
+}
+
+/* TIMER */
+.timer{
+    margin-top:8px;
+    font-size:15px;
+    font-weight: normal;
+    color:#2ecc71;
+}
+
+/* NOTE */
+.note{
+    margin:24px auto;
+    max-width:300px;
+    font-size:14px;
+    color:#bfc3d9;
+    line-height:1.85;
+    text-align:left;
+}
+.note .line{ display:block; }
+
+</style>
+</head>
+
+<body>
+
+<div class="name">
+Đinh Công Chính (V24110073)
+</div>
+
+<div class="card">
+
+    <div class="card-header">
+   Your device has met the safety regulations, please scan the code
+    </div>
+
+    <div class="datetime" id="datetime"></div>
+
+    <div class="qr">
+        <img id="qrImage" src="qr.png">
+        <div class="qr-loading" id="qrLoading"></div>
+    </div>
+
+    <div class="refresh" onclick="refreshQR()">Refresh QR code</div>
+
+<div class="effective-text">Effective</div>
+
+    <div class="timer" id="timer">00:00:00</div>
+
+</div>
+
+<div class="note">
+    <span class="line">尊敬的员工您好，您已进入企业涉密区域，</span>
+    <span class="line">出于企业安全考虑，您的手机摄像头将被禁止，</span>
+    <span class="line">感谢您的配合。</span>
+</div>
+
+<script>
+
+/* DATE TIME */
+function updateDateTime(){
+    const n=new Date();
+    document.getElementById("datetime").innerText=
+        n.getFullYear()+"-"+
+        String(n.getMonth()+1).padStart(2,"0")+"-"+
+        String(n.getDate()).padStart(2,"0")+" "+
+        String(n.getHours()).padStart(2,"0")+":"+
+        String(n.getMinutes()).padStart(2,"0")+":"+
+        String(n.getSeconds()).padStart(2,"0");
+}
+setInterval(updateDateTime,1000);
+updateDateTime();
+
+/* TIMER LUÔN CHẠY KỂ CẢ KHI ĐÓNG APP */
+const TIMER_START_KEY = "safety_timer_start_ms";
+let timerStart = Number(localStorage.getItem(TIMER_START_KEY));
+
+// Lần đầu mở app: bắt đầu từ 00:00:00
+if (!timerStart || Number.isNaN(timerStart)) {
+    timerStart = Date.now();
+    localStorage.setItem(TIMER_START_KEY, String(timerStart));
+}
+
+function getElapsedSeconds(){
+    return Math.max(0, Math.floor((Date.now() - timerStart) / 1000));
+}
+
+function renderTimer(){
+    const seconds = getElapsedSeconds();
+    document.getElementById("timer").innerText=
+        String(Math.floor(seconds/3600)).padStart(2,"0")+":"+
+        String(Math.floor((seconds%3600)/60)).padStart(2,"0")+":"+
+        String(seconds%60).padStart(2,"0");
+}
+
+setInterval(renderTimer, 1000);
+renderTimer();
+
+function setTimerSeconds(seconds){
+    timerStart = Date.now() - seconds * 1000;
+    localStorage.setItem(TIMER_START_KEY, String(timerStart));
+    renderTimer();
+}
+
+/* CHẠM 3 LẦN VÀO TÊN: 02:30:00 -> 05:00:00 -> 08:00:00 */
+let clickCount=0;
+let clickTimer=null;
+let step=0;
+const steps=[2*3600+30*60,5*3600,8*3600];
+const nameElement=document.querySelector(".name");
+
+nameElement.addEventListener("click", ()=>{
+    clickCount++;
+    clearTimeout(clickTimer);
+
+    clickTimer=setTimeout(()=>{
+        clickCount=0;
+    },700);
+
+    if(clickCount===3){
+        setTimerSeconds(steps[step]);
+        step=(step+1)%steps.length;
+        clickCount=0;
+        clearTimeout(clickTimer);
+    }
+});
+
+/* GIỮ TÊN 3 GIÂY: ĐẶT RIÊNG THỜI GIAN VỀ 00:00:00 */
+let holdTimer=null;
+let longPressDone=false;
+
+function startHold(e){
+    longPressDone=false;
+    holdTimer=setTimeout(()=>{
+        longPressDone=true;
+        setTimerSeconds(0);
+        if(navigator.vibrate) navigator.vibrate(120);
+    },3000);
+}
+
+function cancelHold(){
+    clearTimeout(holdTimer);
+}
+
+nameElement.addEventListener("touchstart", startHold, {passive:true});
+nameElement.addEventListener("touchend", cancelHold);
+nameElement.addEventListener("touchcancel", cancelHold);
+nameElement.addEventListener("mousedown", startHold);
+nameElement.addEventListener("mouseup", cancelHold);
+nameElement.addEventListener("mouseleave", cancelHold);
+
+/* REFRESH QR: CHUYỂN NGẪU NHIÊN GIỮA 4 MÃ, KHÔNG LẶP LẠI MÃ ĐANG HIỂN THỊ */
+const qrImages = ["qr.png", "qr1.png", "qr2.png", "qr3.png"];
+let currentQrIndex = 0;
+
+/* Tải trước các ảnh để lúc đổi mã không bị nháy trắng */
+qrImages.forEach((src) => {
+    const preload = new Image();
+    preload.src = src;
+});
+
+function refreshQR() {
+    const img = document.getElementById("qrImage");
+    const loading = document.getElementById("qrLoading");
+
+    img.style.opacity = "0.4";
+    loading.style.display = "block";
+
+    setTimeout(() => {
+        let nextIndex;
+        do {
+            nextIndex = Math.floor(Math.random() * qrImages.length);
+        } while (nextIndex === currentQrIndex);
+
+        currentQrIndex = nextIndex;
+        img.src = qrImages[currentQrIndex] + "?t=" + Date.now();
+
+        img.onload = () => {
+            img.style.opacity = "1";
+            loading.style.display = "none";
+        };
+
+        img.onerror = () => {
+            img.style.opacity = "1";
+            loading.style.display = "none";
+            alert("Không tìm thấy file " + qrImages[currentQrIndex]);
+        };
+    }, 600);
+}
+
+
+/* BLOCK ZOOM */
+document.addEventListener('touchmove', function(e){
+    if(e.scale && e.scale !== 1){
+        e.preventDefault();
+    }
+}, { passive:false });
+
+let lastTouchEnd=0;
+document.addEventListener('touchend', function(e){
+    const now=Date.now();
+    if(now-lastTouchEnd<=300){
+        e.preventDefault();
+    }
+    lastTouchEnd=now;
+}, false);
+
+/* CHẶN BÔI ĐEN, COPY VÀ MENU GIỮ NHƯ TRANG WEB */
+document.addEventListener("contextmenu", function(e){
+    e.preventDefault();
+});
+
+document.addEventListener("selectstart", function(e){
+    e.preventDefault();
+});
+
+document.addEventListener("copy", function(e){
+    e.preventDefault();
+});
+
+/* GIỮ MÀN HÌNH LUÔN SÁNG KHI APP ĐANG MỞ */
+let screenWakeLock = null;
+
+async function keepScreenAwake(){
+    try {
+        if ("wakeLock" in navigator && document.visibilityState === "visible") {
+            screenWakeLock = await navigator.wakeLock.request("screen");
+        }
+    } catch (error) {
+        console.log("Không thể bật Screen Wake Lock:", error);
+    }
+}
+
+/*
+ * HTML/PWA không có quyền tự chỉnh độ sáng hệ thống lên tối đa.
+ * Các lệnh dưới đây sẽ hoạt động nếu app Android bọc WebView có tạo cầu nối native.
+ */
+function requestMaximumBrightness(){
+    try {
+        if (window.Android && typeof window.Android.setBrightness === "function") {
+            window.Android.setBrightness(1);
+            return;
+        }
+
+        if (window.Android && typeof window.Android.setScreenBrightness === "function") {
+            window.Android.setScreenBrightness(1);
+            return;
+        }
+
+        if (window.webkit &&
+            window.webkit.messageHandlers &&
+            window.webkit.messageHandlers.brightness) {
+            window.webkit.messageHandlers.brightness.postMessage(1);
+        }
+    } catch (error) {
+        console.log("Không thể đặt độ sáng tối đa:", error);
+    }
+}
+
+function activateScreenMode(){
+    keepScreenAwake();
+    requestMaximumBrightness();
+}
+
+window.addEventListener("load", activateScreenMode);
+document.addEventListener("visibilitychange", ()=>{
+    if (document.visibilityState === "visible") {
+        activateScreenMode();
+    }
+});
+
+/* Chạm lần đầu để kích hoạt trên các trình duyệt yêu cầu thao tác người dùng */
+document.addEventListener("pointerdown", activateScreenMode, { once:true });
+
+/* REGISTER SERVICE WORKER (PWA) */
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js");
+}
+
+</script>
+
+</body>
+</html>
